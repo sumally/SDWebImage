@@ -27,3 +27,6 @@ DerivedData
 #
 Pods/
 Podfile.lock
+
+# AppCode
+.idea/
