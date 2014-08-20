@@ -1,5 +1,4 @@
 # Xcode
-#
 build/
 *.pbxuser
 !default.pbxuser
@@ -18,6 +17,9 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+
+# AppCode
+.idea/
 
 # CocoaPods
 #

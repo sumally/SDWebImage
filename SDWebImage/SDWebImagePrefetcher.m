@@ -8,10 +8,6 @@
 
 #import "SDWebImagePrefetcher.h"
 
-#if !defined(DEBUG) && !defined (SD_VERBOSE)
-#define NSLog(...)
-#endif
-
 @interface SDWebImagePrefetcher ()
 
 @property (strong, nonatomic) SDWebImageManager *manager;
@@ -20,7 +16,7 @@
 @property (assign, nonatomic) NSUInteger skippedCount;
 @property (assign, nonatomic) NSUInteger finishedCount;
 @property (assign, nonatomic) NSTimeInterval startedTime;
-@property (copy, nonatomic) SDWebImagePrefetcherCompletionBlock completionBlock;
+@property (copy, nonatomic) SDWebImageNoParamsBlock completionBlock;
 @property (copy, nonatomic) SDWebImagePrefetcherProgressBlock progressBlock;
 
 @end
@@ -62,25 +58,16 @@
 
         if (image) {
             if (self.progressBlock) {
-                self.progressBlock(self.finishedCount,[self.prefetchURLs count]);
+                self.progressBlock(imageURL);
             }
-            NSLog(@"Prefetched %@ out of %@", @(self.finishedCount), @(self.prefetchURLs.count));
+
         }
         else {
             if (self.progressBlock) {
-                self.progressBlock(self.finishedCount,[self.prefetchURLs count]);
+                self.progressBlock(imageURL);
             }
-            NSLog(@"Prefetched %@ out of %@ (Failed)", @(self.finishedCount), @(self.prefetchURLs.count));
-
             // Add last failed
             self.skippedCount++;
-        }
-        if ([self.delegate respondsToSelector:@selector(imagePrefetcher:didPrefetchURL:finishedCount:totalCount:)]) {
-            [self.delegate imagePrefetcher:self
-                            didPrefetchURL:self.prefetchURLs[index]
-                             finishedCount:self.finishedCount
-                                totalCount:self.prefetchURLs.count
-            ];
         }
 
         if (self.prefetchURLs.count > self.requestedCount) {
@@ -89,31 +76,19 @@
             });
         }
         else if (self.finishedCount == self.requestedCount) {
-            [self reportStatus];
             if (self.completionBlock) {
-                self.completionBlock(self.finishedCount, self.skippedCount);
+                self.completionBlock();
                 self.completionBlock = nil;
             }
         }
     }];
 }
 
-- (void)reportStatus {
-    NSUInteger total = [self.prefetchURLs count];
-    NSLog(@"Finished prefetching (%@ successful, %@ skipped, timeElasped %.2f)", @(total - self.skippedCount), @(self.skippedCount), CFAbsoluteTimeGetCurrent() - self.startedTime);
-    if ([self.delegate respondsToSelector:@selector(imagePrefetcher:didFinishWithTotalCount:skippedCount:)]) {
-        [self.delegate imagePrefetcher:self
-               didFinishWithTotalCount:(total - self.skippedCount)
-                          skippedCount:self.skippedCount
-        ];
-    }
-}
-
 - (void)prefetchURLs:(NSArray *)urls {
     [self prefetchURLs:urls progress:nil completed:nil];
 }
 
-- (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImagePrefetcherCompletionBlock)completionBlock {
+- (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImageNoParamsBlock)completionBlock {
     [self cancelPrefetching]; // Prevent duplicate prefetch request
     self.startedTime = CFAbsoluteTimeGetCurrent();
     self.prefetchURLs = urls;

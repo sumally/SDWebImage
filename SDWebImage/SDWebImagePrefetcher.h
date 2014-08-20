@@ -9,34 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "SDWebImageManager.h"
 
-@class SDWebImagePrefetcher;
-
-@protocol SDWebImagePrefetcherDelegate <NSObject>
-
-@optional
-
-/**
- * Called when an image was prefetched.
- *
- * @param imagePrefetcher The current image prefetcher
- * @param imageURL        The image url that was prefetched
- * @param finishedCount   The total number of images that were prefetched (successful or not)
- * @param totalCount      The total number of images that were to be prefetched
- */
-- (void)imagePrefetcher:(SDWebImagePrefetcher *)imagePrefetcher didPrefetchURL:(NSURL *)imageURL finishedCount:(NSUInteger)finishedCount totalCount:(NSUInteger)totalCount;
-
-/**
- * Called when all images are prefetched.
- * @param imagePrefetcher The current image prefetcher
- * @param totalCount      The total number of images that were prefetched (whether successful or not)
- * @param skippedCount    The total number of images that were skipped
- */
-- (void)imagePrefetcher:(SDWebImagePrefetcher *)imagePrefetcher didFinishWithTotalCount:(NSUInteger)totalCount skippedCount:(NSUInteger)skippedCount;
-
-@end
-
-typedef void(^SDWebImagePrefetcherProgressBlock)(NSUInteger noOfFinishedUrls, NSUInteger noOfTotalUrls);
-typedef void(^SDWebImagePrefetcherCompletionBlock)(NSUInteger noOfFinishedUrls, NSUInteger noOfSkippedUrls);
+typedef void(^SDWebImagePrefetcherProgressBlock)(NSURL *url);
 
 /**
  * Prefetch some URLs in the cache for future use. Images are downloaded in low priority.
@@ -57,8 +30,6 @@ typedef void(^SDWebImagePrefetcherCompletionBlock)(NSUInteger noOfFinishedUrls, 
  * SDWebImageOptions for prefetcher. Defaults to SDWebImageLowPriority.
  */
 @property (nonatomic, assign) SDWebImageOptions options;
-
-@property (weak, nonatomic) id <SDWebImagePrefetcherDelegate> delegate;
 
 /**
  * Return the global image prefetcher instance.
@@ -87,7 +58,7 @@ typedef void(^SDWebImagePrefetcherCompletionBlock)(NSUInteger noOfFinishedUrls, 
  *                        first param is the number of completed (successful or not) requests,
  *                        second parameter is the number of skipped requests
  */
-- (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImagePrefetcherCompletionBlock)completionBlock;
+- (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImageNoParamsBlock)completionBlock;
 
 /**
  * Remove and cancel queued list
