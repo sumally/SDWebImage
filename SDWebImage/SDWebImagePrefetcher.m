@@ -32,6 +32,7 @@
     if ((self = [super init])) {
         _manager = [SDWebImageManager new];
         _options = SDWebImageLowPriority;
+        _prefetchURLs = [NSMutableArray array];
         self.maxConcurrentDownloads = 3;
     }
     return self;
@@ -78,18 +79,16 @@
 }
 
 - (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImageNoParamsBlock)completionBlock {
-    [self cancelPrefetching]; // Prevent duplicate prefetch request
-    self.prefetchURLs = [urls mutableCopy];
+    [self.prefetchURLs addObjectsFromArray:urls];
     self.completionBlock = completionBlock;
     self.progressBlock = progressBlock;
-
     for (NSUInteger i = 0; i < self.maxConcurrentDownloads; i++) {
         [self startPrefetching];
     }
 }
 
 - (void)cancelPrefetching {
-    self.prefetchURLs = nil;
+    [self.prefetchURLs removeAllObjects];
     [self.manager cancelAll];
 }
 
