@@ -22,7 +22,7 @@
 @property (strong, nonatomic, readwrite) SDImageCache *imageCache;
 @property (strong, nonatomic, readwrite) SDWebImageDownloader *imageDownloader;
 @property (strong, nonatomic) NSMutableArray *failedURLs;
-@property (strong, nonatomic) NSMutableArray *runningOperations;
+@property (strong, nonatomic) NSMutableDictionary *runningOperations;
 
 @end
 
@@ -42,7 +42,7 @@
         _imageCache = [self createCache];
         _imageDownloader = [SDWebImageDownloader sharedDownloader];
         _failedURLs = [NSMutableArray new];
-        _runningOperations = [NSMutableArray new];
+        _runningOperations = [NSMutableDictionary new];
     }
     return self;
 }
@@ -142,14 +142,14 @@
     }
 
     @synchronized (self.runningOperations) {
-        [self.runningOperations addObject:operation];
+        self.runningOperations[url] = operation;
     }
     NSString *key = [self cacheKeyForURL:url];
 
     operation.cacheOperation = [self.imageCache queryDiskCacheForKey:key done:^(UIImage *image, SDImageCacheType cacheType) {
         if (operation.isCancelled) {
             @synchronized (self.runningOperations) {
-                [self.runningOperations removeObject:operation];
+                [self.runningOperations removeObjectForKey:url];
             }
 
             return;
@@ -236,7 +236,7 @@
 
                 if (finished) {
                     @synchronized (self.runningOperations) {
-                        [self.runningOperations removeObject:operation];
+                        [self.runningOperations removeObjectForKey:url];
                     }
                 }
             }];
@@ -244,7 +244,7 @@
                 [subOperation cancel];
                 
                 @synchronized (self.runningOperations) {
-                    [self.runningOperations removeObject:weakOperation];
+                    [self.runningOperations removeObjectForKey:url];
                 }
             };
         }
@@ -255,7 +255,7 @@
                 }
             });
             @synchronized (self.runningOperations) {
-                [self.runningOperations removeObject:operation];
+                [self.runningOperations removeObjectForKey:url];
             }
         }
         else {
@@ -266,7 +266,7 @@
                 }
             });
             @synchronized (self.runningOperations) {
-                [self.runningOperations removeObject:operation];
+                [self.runningOperations removeObjectForKey:url];
             }
         }
     }];
@@ -283,9 +283,9 @@
 
 - (void)cancelAll {
     @synchronized (self.runningOperations) {
-        NSArray *copiedOperations = [self.runningOperations copy];
-        [copiedOperations makeObjectsPerformSelector:@selector(cancel)];
-        [self.runningOperations removeObjectsInArray:copiedOperations];
+        NSDictionary *copiedOperations = [self.runningOperations copy];
+        [[copiedOperations allValues] makeObjectsPerformSelector:@selector(cancel)];
+        [self.runningOperations removeAllObjects];
     }
 }
 
