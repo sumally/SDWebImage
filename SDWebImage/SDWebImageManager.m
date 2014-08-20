@@ -281,6 +281,14 @@
     }
 }
 
+- (void)cancelForURL:(NSURL *)url {
+    @synchronized (self.runningOperations) {
+        SDWebImageCombinedOperation *operation = self.runningOperations[url];
+        [operation cancel];
+        [self.runningOperations removeObjectForKey:url];
+    }
+}
+
 - (void)cancelAll {
     @synchronized (self.runningOperations) {
         NSDictionary *copiedOperations = [self.runningOperations copy];

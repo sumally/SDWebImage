@@ -87,6 +87,13 @@
     }
 }
 
+- (void)cancelPrefetchingForURL:(NSURL *)url {
+    [self.prefetchURLs removeObject:url];
+    // in case the array is const of NSString
+    [self.prefetchURLs removeObject:url.absoluteString];
+    [self.manager cancelForURL:url];
+}
+
 - (void)cancelPrefetching {
     [self.prefetchURLs removeAllObjects];
     [self.manager cancelAll];

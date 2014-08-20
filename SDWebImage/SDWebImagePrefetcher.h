@@ -60,6 +60,7 @@ typedef void(^SDWebImagePrefetcherProgressBlock)(NSURL *url);
  */
 - (void)prefetchURLs:(NSArray *)urls progress:(SDWebImagePrefetcherProgressBlock)progressBlock completed:(SDWebImageNoParamsBlock)completionBlock;
 
+- (void)cancelPrefetchingForURL:(NSURL *)url;
 /**
  * Remove and cancel queued list
  */
