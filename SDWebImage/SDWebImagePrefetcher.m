@@ -21,6 +21,7 @@
 @property (copy, nonatomic) SDWebImagePrefetcherCompletionBlock completionBlock;
 @property (copy, nonatomic) SDWebImagePrefetcherProgressBlock progressBlock;
 @property (nonatomic, readonly) BOOL isCancelled;
+@property (weak, nonatomic) SDWebImagePrefetcher* imagePrefetcher;
 @property (weak, nonatomic) id <SDWebImagePrefetcherDelegate> delegate;
 - (void)cancel;
 @end
@@ -44,7 +45,7 @@
     NSUInteger total = [self.prefetchURLs count];
     NSLog(@"Finished prefetching (%@ successful, %@ skipped, timeElasped %.2f)", @(total - self.skippedCount), @(self.skippedCount), CFAbsoluteTimeGetCurrent() - self.startedTime);
     if ([self.delegate respondsToSelector:@selector(imagePrefetcher:didFinishWithTotalCount:skippedCount:)]) {
-        [self.delegate imagePrefetcher:self
+        [self.delegate imagePrefetcher:self.imagePrefetcher
                didFinishWithTotalCount:(total - self.skippedCount)
                           skippedCount:self.skippedCount
         ];
@@ -103,7 +104,7 @@
 
         if (image) {
             if (weakData.progressBlock) {
-                weakData.progressBlock(weakData.finishedCount,[weakData.prefetchURLs count]);
+                weakData.progressBlock(weakData.finishedCount, [weakData.prefetchURLs count]);
             }
             NSLog(@"Prefetched %@ out of %@", @(weakData.finishedCount), @(weakData.prefetchURLs.count));
         }
@@ -130,7 +131,7 @@
             });
         }
         else if (weakData.finishedCount == weakData.requestedCount) {
-            [data reportStatus];
+            [weakData reportStatus];
             if (weakData.completionBlock) {
                 weakData.completionBlock(weakData.finishedCount, weakData.skippedCount);
                 weakData.completionBlock = nil;
@@ -151,6 +152,7 @@
     data.prefetchURLs = urls;
     data.completionBlock = completionBlock;
     data.progressBlock = progressBlock;
+    data.imagePrefetcher = self;
     self.data = data;
 
     // Starts prefetching from the very first image on the list with the max allowed concurrency
